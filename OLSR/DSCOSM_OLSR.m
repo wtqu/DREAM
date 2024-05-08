@@ -1,5 +1,5 @@
-function [out] = DSCOSM_OLSR(data, options)
-%This code aims at solving the DSCOSM for OLSR
+function [out] = DREAM_OLSR(data, options)
+%This code aims at solving the DREAM for OLSR
 %     \min_{Y,X_i} \sum_{i=1}^d ||A_i^T*X_i-B_i^T||_F^2 + mu/4*||Y'Y-I_p||_F^2
 %     s.t. ||Y||_{2,0} <=s,
 % where Y, X_i\in\R^{n\times p}, s<<n is an given integer
