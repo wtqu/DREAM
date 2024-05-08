@@ -19,11 +19,11 @@ options.mu        = 2^(4);
 options.beta      = 1;
 
 
-out_DSCOSM  =  DSCOSM_OLSR(data, options);
-RMSE_DSCOSM = 0;
-for i = 1:length(out_DSCOSM.idx_block)
-    Ai = A(:,out_DSCOSM.idx_block{i})';
+out_DREAM  =  DREAM_OLSR(data, options);
+RMSE_DREAM = 0;
+for i = 1:length(out_DREAM.idx_block)
+    Ai = A(:,out_DREAM.idx_block{i})';
     [~,mi] = size(Ai);
-    RMSE_DSCOSM = RMSE_DSCOSM + sqrt(norm(Ai*out_DSCOSM.Y-B,'fro')^2/(mi*p));
+    RMSE_DREAM = RMSE_DREAM + sqrt(norm(Ai*out_DREAM.Y-B,'fro')^2/(mi*p));
 end
 
