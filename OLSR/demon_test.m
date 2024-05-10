@@ -18,7 +18,6 @@ options.tol       = 1e-5;
 options.mu        = 2^(4);
 options.beta      = 1;
 
-
 out_DREAM  =  DREAM_OLSR(data, options);
 RMSE_DREAM = 0;
 for i = 1:length(out_DREAM.idx_block)
@@ -26,4 +25,3 @@ for i = 1:length(out_DREAM.idx_block)
     [~,mi] = size(Ai);
     RMSE_DREAM = RMSE_DREAM + sqrt(norm(Ai*out_DREAM.Y-B,'fro')^2/(mi*p));
 end
-
