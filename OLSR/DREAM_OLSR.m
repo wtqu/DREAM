@@ -37,11 +37,10 @@ if isfield(options,'mu');        mu        = options.mu;        else; mu        
 if isfield(options,'num_block'); num_block = options.num_block; else; num_block = 10;   end
 if isfield(options,'s');         s         = options.s;         else; s         = 10;  end
 if isfield(options,'tol');       tol       = options.tol;       else; tol       = 1e-5; end
-eta   = 1e-4;
-sigma = 1e-8;
+
 [n,m] = size(A);
 [p,~] = size(B);
-Ip = eye(p); In = eye(n); Is = eye(s);
+Ip = eye(p); In = eye(n); Nmaxit=5;
 
 X0      = normrnd(0,1,[n,p]);
 Y0      = normrnd(0,1,[n,p]);
@@ -61,58 +60,21 @@ for i = 1:num_block
     X{i} = X0;                              Lambda{i} = Lambda0;
 end
 
-Y_current = Y0;
-
 fprintf(' Run solver DSMNAL---------------------------------%5d\n',num_block);
 fprintf('Iter\t  ObjVal\t error_obj\t  error_Y\n');
 
 tic;
 for iter = 1:maxiter
-    [h_loss, h_grad] = funch(Y_current,X,Lambda,num_block,beta,mu,Ip);                            % Calculate the gradient and function values of h
-    [~,Tu]           = maxk( sum((Y_current - eta * h_grad).^2,2),s,'ComparisonMethod','abs');    % Find the support indices Tu
-    YT               = Y_current(Tu,:);        
-    
     %% update Y by NHTP
-    for initer = 1 : 4
-        Y_old      = Y_current; 
-        h_grad_YT  = h_grad(Tu,:);                                                      % Compute (\nabla h(Y))_Tu
-        err_newton = Fnorm(h_grad_YT);
-%         fprintf('initer = %5d\t  err_newton = %6.2e\t\n',initer, err_newton);
-        if err_newton < tol; break; end                                                 % check the stop criteria of NHTP
+    Y_old        = Y;
+    pars.maxit   = Nmaxit;
+    pars.Y0      = Y;
+    pars.mu      = mu;
+    pars.beta    = beta;
+    pars.X0      = X;
+    pars.Lambda0 = Lambda;
 
-        Kron  = kron(Ip,YT* (YT')); 
-        Kron2 = kron((YT')*YT,Is); 
-        Kron3 = kron((YT'),YT); 
-        nb_beta_mu = num_block * beta- mu;
-        H_grad_1   = mu * (Kron+Kron2+ Kron3)+ nb_beta_mu* eye(s*p);                    % calculate the hessian of h(Y)
-        
-        vec_h_grad_YT = reshape(h_grad_YT,[],1);      
-        vec_D_Tu = (H_grad_1)\(-vec_h_grad_YT );                                        % solve the Newton equation   
-
-        D_Tu   = reshape(vec_D_Tu,[s,p]);                                               % update the search direction D
-        temp1  = max(0,Fnorm(Y_current)-Fnorm(YT)); 
-        marker = (trace(D_Tu'*h_grad_YT) >= -(1e-10)*(Fnorm(D_Tu)) + temp1/4/eta );
-        if Fnorm(D_Tu) > 1e16 || marker
-            D_Tu = - h_grad_YT;
-        end
-        D         = -Y_current;
-        D(Tu,:)   = D_Tu;
-
-        % Armijio line search
-        alpha     = 1;
-        Y_current = zeros(n,p);
-        temp2     = sigma * trace(h_grad'*D);  
-        for mm = 1:10
-            Y_current(Tu,:)      = Y_old(Tu,:) + alpha * D_Tu;
-            [h_loss_new, h_grad] = funch(Y_current,X,Lambda,num_block,beta,mu,Ip);
-            if h_loss_new <= (h_loss+alpha*temp2);  break; end
-            alpha = alpha/2;
-        end
-
-        [~,Tu] = maxk( sum((Y_current - eta * h_grad).^2,2),s,'ComparisonMethod','abs'); % find the support indices Tu
-        YT     = Y_current(Tu,:);   
-        if mod(initer,5)==0; eta = max(eta/2,1e-5); end
-    end
+    Y  = NHTP(n,p,s,num_block,pars); 
     
     %% update X and Lambda
     f_cost = 0;
@@ -142,16 +104,4 @@ out.iter        = iter;
 out.Error_Y     = error_Y;
 out.Error_obj   = error_obj;
 out.time        = time;
-end
-
-function [h_loss, h_grad] = funch(Y,X,Lambda,num_block,beta,mu,Ip)
-%% Calculate the gradient and function values of h
-    gh_grad  = 0; h_loss_2 = 0;
-    for i = 1:num_block                                                                 %% Calculate the gradient and function values of h
-        X_local  = X{i};     Lambda_local = Lambda{i}; 
-        gh_grad  = gh_grad - beta*(X_local-Y-Lambda_local/beta);
-        h_loss_2 = h_loss_2 + beta/2*(norm(X_local-Y-Lambda_local/beta,'fro')^2); 
-    end
-    h_grad = mu*Y*((Y')*Y-Ip) + gh_grad;                                              % gradient of h
-    h_loss = mu/4*(norm(Y'*Y-Ip,'fro'))^2 + h_loss_2/2;                                            % function values of h
 end
