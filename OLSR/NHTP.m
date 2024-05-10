@@ -25,7 +25,6 @@ function [Y, out] = NHTP(n,p,s,num_block,pars)
 %       out.time  -- computational time  
 %       out.iter  -- number of iterations
 
-
 t0    = tic;
 if nargin < 5; pars = []; end
 if isfield(pars,'maxit');     maxit     = pars.maxit;     else; maxit     = 1e2;        end
