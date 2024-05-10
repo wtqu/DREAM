@@ -1,4 +1,4 @@
-function [Y,Y0,out] = NHTP(n,p,s,num_block,pars)
+function [Y, out] = NHTP(n,p,s,num_block,pars)
 %This code aims at solving the sparsity constrained optimization
 %     min_Y mu/4*||Y'Y-I_p||_F^2 + \sum_{i=1}^d beta_i/2*||X_i-Y-Lambda_i/beta_i||_F^2
 %     s.t. ||Y||_{2,0}<=s,
@@ -91,8 +91,7 @@ for iter = 1 : maxit
             if h_loss_new   <= (h0+alpha*temp2);  break; end
             alpha           = alpha/2;
         end
-
-         
+        
         [~,Tu] = maxk( sum((Y - eta * g).^2,2),s,'ComparisonMethod','abs'); % find the support indices Tu
         YT     = Y(Tu,:);
 
@@ -104,6 +103,4 @@ for iter = 1 : maxit
 out.iter = iter;
 out.time = toc(t0);
 Y       =  Y;
-
 end
-
