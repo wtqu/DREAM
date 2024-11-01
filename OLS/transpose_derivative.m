@@ -1,5 +1,5 @@
 function K = transpose_derivative(Y)
-    % This function calculates the exchange matrix K hat computes the derivative
+    % This function calculates the exchange matrix K that is the derivative
     % of Y^T with respect to Y, where Y is an m x n matrix.
     %
     % Input:
